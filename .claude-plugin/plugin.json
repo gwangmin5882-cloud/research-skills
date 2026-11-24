@@ -1,0 +1,19 @@
+{
+  "name": "research-skills",
+  "version": "0.1.0",
+  "description": "Two research skills: citation-check verifies that references exist (Crossref/OpenAlex/arXiv) and support the citing sentence; experiment-report turns result CSV/Excel into statistics, visually self-checked figures and a short report.",
+  "author": {
+    "name": "gwangmin5882-cloud"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/gwangmin5882-cloud/research-skills",
+  "keywords": [
+    "research",
+    "citations",
+    "bibliography",
+    "hallucination",
+    "statistics",
+    "plots",
+    "experiments"
+  ]
+}

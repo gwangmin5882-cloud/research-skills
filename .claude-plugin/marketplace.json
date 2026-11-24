@@ -1,0 +1,14 @@
+{
+  "name": "research-skills",
+  "owner": {
+    "name": "gwangmin5882-cloud"
+  },
+  "description": "Claude skills for research work: citation verification and experiment result reports",
+  "plugins": [
+    {
+      "name": "research-skills",
+      "source": "./",
+      "description": "citation-check (verify references exist and support claims) + experiment-report (tables, statistics, self-checked figures, honest write-up)"
+    }
+  ]
+}
