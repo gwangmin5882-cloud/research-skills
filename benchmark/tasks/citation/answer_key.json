@@ -1,0 +1,23 @@
+{
+  "_about": "Ground truth for tasks/citation/input/manuscript.md. existence: accepted labels score 1, 'half' labels score 0.5, anything else 0. claim is scored only for references that really exist.",
+  "existence": {
+    "1":  {"truth": "OK",             "half": ["UNSURE"],                 "why": "Vaswani et al. 2017, real"},
+    "2":  {"truth": "WRONG_METADATA", "half": ["UNSURE"],                 "why": "BERT is real (NAACL 2019, arXiv 2018); year 2016 is wrong"},
+    "3":  {"truth": "WRONG_ID",       "also": ["FAKE"], "half": ["UNSURE"], "why": "invented title with the real DOI of LeCun et al. 'Deep learning' (2015): fits both WRONG_ID and FAKE (changed after the pilot run; applies to both conditions)"},
+    "4":  {"truth": "OK",             "half": ["UNSURE"],                 "why": "Walters & Wilder 2023, real, DOI correct"},
+    "5":  {"truth": "FAKE",           "half": ["UNSURE"],                 "why": "invented paper and journal"},
+    "6":  {"truth": "OK",             "half": ["UNSURE"],                 "why": "He et al. 2016 ResNet, real"},
+    "7":  {"truth": "OK",             "half": ["UNSURE"],                 "why": "Kingma & Ba, Adam, ICLR 2015, arXiv:1412.6980"},
+    "8":  {"truth": "FAKE",           "half": ["UNSURE"],                 "why": "real authors, invented paper"},
+    "9":  {"truth": "WRONG_ID",       "half": ["WRONG_METADATA", "UNSURE"], "why": "GPT-3 paper is real but arXiv:1706.03762 is 'Attention is all you need'"},
+    "10": {"truth": "OK",             "half": ["UNSURE"],                 "why": "Goodfellow et al. 2016, MIT Press book"}
+  },
+  "claim": {
+    "1":  {"accept": ["SUPPORTED"],                 "half": ["PARTIAL", "CANT_TELL"], "why": "abstract: based solely on attention, dispensing with recurrence and convolutions"},
+    "2":  {"accept": ["SUPPORTED"],                 "half": ["PARTIAL", "CANT_TELL"], "why": "abstract: deep bidirectional representations"},
+    "4":  {"accept": ["NOT_SUPPORTED", "PARTIAL"],  "half": ["CANT_TELL"],            "why": "55% was GPT-3.5; GPT-4 was 18%"},
+    "6":  {"accept": ["NOT_SUPPORTED"],             "half": ["PARTIAL", "CANT_TELL"], "why": "ResNet is about deep (image) networks, not RNN vanishing gradients"},
+    "7":  {"accept": ["SUPPORTED"],                 "half": ["PARTIAL", "CANT_TELL"], "why": "abstract: first-order gradient-based optimization of stochastic objective functions"},
+    "10": {"accept": ["SUPPORTED", "CANT_TELL"],    "half": ["PARTIAL"],              "why": "a textbook; no abstract to check, either answer is reasonable"}
+  }
+}
