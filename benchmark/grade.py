@@ -7,6 +7,9 @@ grade.py - score the runs.
                                 #   anonymous IDs (the grader never sees which condition it is)
   python grade.py aggregate     # merge scores + meta.json into results/results.md and results.json
 
+Set BENCH_HOME the same way as for run_benchmark.py: runs/ and grading/ live there,
+results/ stays next to this file.
+
 The experiment task is graded by a separate reviewer (person or a fresh AI agent with no
 knowledge of the conditions) using tasks/experiment/rubric.md. The reviewer writes
 grading/grades.json: {"<anon id>": {"items": {"1": 1, "2": 0, ...}, "notes": "..."}}.
@@ -23,7 +26,9 @@ import statistics
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-RUNS = os.path.join(HERE, "runs")
+HOME = os.path.abspath(os.environ.get("BENCH_HOME") or HERE)   # same as run_benchmark.py
+RUNS = os.path.join(HOME, "runs")
+GRADING = os.path.join(HOME, "grading")
 LABELS_EXIST = {"OK", "WRONG_METADATA", "WRONG_ID", "FAKE", "UNSURE"}
 
 
@@ -79,7 +84,7 @@ def grade_citation():
 
 
 def blind():
-    gdir = os.path.join(HERE, "grading")
+    gdir = GRADING
     if os.path.exists(gdir):
         shutil.rmtree(gdir)
     runs = sorted(glob.glob(os.path.join(RUNS, "experiment", "*", "run-*")))
@@ -95,10 +100,10 @@ def blind():
         for png in glob.glob(os.path.join(run_dir, "**", "*.png"), recursive=True):
             name = os.path.relpath(png, run_dir).replace(os.sep, "__")
             shutil.copy(png, os.path.join(dst, name))
-        mapping[anon] = os.path.relpath(run_dir, HERE)
-    with open(os.path.join(HERE, "runs", "blind_mapping.json"), "w", encoding="utf-8") as fh:
+        mapping[anon] = os.path.relpath(run_dir, HOME)
+    with open(os.path.join(RUNS, "blind_mapping.json"), "w", encoding="utf-8") as fh:
         json.dump(mapping, fh, indent=2)
-    print(f"{len(runs)} runs copied to grading/ as {', '.join(sorted(ids))}. Mapping kept in runs/blind_mapping.json.")
+    print(f"{len(runs)} runs copied to {gdir} as {', '.join(sorted(ids))}. Mapping kept in runs/blind_mapping.json.")
 
 
 def msd(xs):
@@ -111,7 +116,7 @@ def msd(xs):
 def aggregate():
     rows = []
     grades = {}
-    gpath = os.path.join(HERE, "grading", "grades.json")
+    gpath = os.path.join(GRADING, "grades.json")
     mpath = os.path.join(RUNS, "blind_mapping.json")
     if os.path.exists(gpath) and os.path.exists(mpath):
         g = json.load(open(gpath, encoding="utf-8"))
@@ -119,7 +124,7 @@ def aggregate():
         for anon, rel in m.items():
             if anon in g:
                 items = g[anon]["items"]
-                grades[os.path.normpath(os.path.join(HERE, rel))] = {
+                grades[os.path.normpath(os.path.join(HOME, rel))] = {
                     "score": round(sum(items.values()) / len(items), 3), "items": items, "notes": g[anon].get("notes")}
     for meta_path in sorted(glob.glob(os.path.join(RUNS, "*", "*", "run-*", "meta.json"))):
         run_dir = os.path.dirname(meta_path)
@@ -180,12 +185,14 @@ def aggregate():
         fh.write("\n".join(L) + "\n")
     print("\n".join(L))
 
-    # figures, drawn with the experiment-report skill's own plot.py
+    # figures, drawn with the experiment-report skill's own plot.py. With n = 3 per group a 95% CI
+    # is very wide (and runs past the 0-1 score range), so show every run plus the mean instead.
     import subprocess
     plot = os.path.join(os.path.dirname(HERE), "skills", "experiment-report", "scripts", "plot.py")
     if any(r.get("score") is not None for r in rows):
         subprocess.run([sys.executable, plot, flat, "--kind", "point", "--x", "task", "--y", "score,duration_s",
                         "--hue", "condition", "--hue-order", "baseline,skill", "--order", "citation,experiment",
+                        "--error", "none", "--rotate", "0", "--xlabel", "Task",
                         "--ylabel", "Score (0-1),Time (s)", "--out", os.path.join(HERE, "results", "comparison.png")])
 
 

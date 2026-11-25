@@ -1,1 +1,2 @@
 tasks/experiment/input/results.csv binary
+*.sh text eol=lf

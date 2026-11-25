@@ -1,0 +1,29 @@
+{
+  "file": "comparison.png",
+  "kind": "point",
+  "x": "task",
+  "y": [
+    "score",
+    "duration_s"
+  ],
+  "hue": "condition",
+  "error_bars": "none",
+  "filters": [],
+  "font": "Malgun Gothic",
+  "n": {
+    "score": {
+      "citation / baseline": 3,
+      "experiment / baseline": 3,
+      "citation / skill": 3,
+      "experiment / skill": 3
+    },
+    "duration_s": {
+      "citation / baseline": 3,
+      "experiment / baseline": 3,
+      "citation / skill": 3,
+      "experiment / skill": 3
+    }
+  },
+  "caption_hint": "n = 3 per group",
+  "hints": []
+}

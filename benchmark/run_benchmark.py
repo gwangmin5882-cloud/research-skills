@@ -3,7 +3,7 @@
 run_benchmark.py - with-skill vs without-skill comparison in one shared environment.
 
 Both conditions run headless Claude Code (`claude -p`) with:
-  - the same Python virtual environment (benchmark/.venv) first on PATH,
+  - the same Python virtual environment (benchmark/.venv, or $BENCH_HOME/.venv) first on PATH,
   - the same model, prompt, input files and allowed tools,
   - a fresh working folder per run.
 The only difference: the `skill` condition loads this repository as a plugin
@@ -13,6 +13,14 @@ Usage (from benchmark/, after `setup_env` and `claude auth login`):
   .venv/Scripts/python run_benchmark.py --reps 3                 # Windows
   .venv/bin/python run_benchmark.py --reps 3 --tasks citation    # macOS/Linux, one task
   python run_benchmark.py --reps 1 --start 2                     # add a 2nd repetition later
+
+BENCH_HOME (environment variable) moves the venv and runs/ to another folder. Use it on
+Windows when this repository sits in a deep folder: Windows can't load a DLL whose full
+path is longer than 260 characters, so matplotlib (Pillow) fails to import from a venv
+nested too deep. Example (PowerShell):  $env:BENCH_HOME = "C:/Users/me/rsb"
+Before any run, a preflight check imports matplotlib, Pillow, numpy and openpyxl from the
+venv and saves a test figure deeper inside runs/ than any agent will write. If that fails,
+nothing starts.
 
 For every (repetition, task) the two conditions run at the same time, so they
 see the same network conditions (public APIs rate-limit both alike).
@@ -30,6 +38,7 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
+HOME = os.path.abspath(os.environ.get("BENCH_HOME") or HERE)   # holds .venv/ and runs/
 TASKS = ["citation", "experiment"]
 CONDITIONS = ["baseline", "skill"]
 TOOLS = "Bash Read Write Edit Glob Grep WebFetch WebSearch Skill"
@@ -37,10 +46,10 @@ TOOLS = "Bash Read Write Edit Glob Grep WebFetch WebSearch Skill"
 
 def venv_bin():
     for sub in ("Scripts", "bin"):
-        p = os.path.join(HERE, ".venv", sub)
+        p = os.path.join(HOME, ".venv", sub)
         if os.path.isdir(p):
             return p
-    raise SystemExit("benchmark/.venv not found. Run setup_env.ps1 (Windows) or setup_env.sh first.")
+    raise SystemExit(f"{os.path.join(HOME, '.venv')} not found. Run setup_env.ps1 (Windows) or setup_env.sh first.")
 
 
 def clean_env():
@@ -53,6 +62,71 @@ def clean_env():
     return env
 
 
+LOCK = os.path.join(HERE, "requirements.lock.txt")
+
+
+def pip(*args):
+    return subprocess.run([os.path.join(venv_bin(), "python"), "-m", "pip", *args, "--disable-pip-version-check"],
+                          capture_output=True, text=True, env=clean_env())
+
+
+def freeze():
+    return sorted(line.strip() for line in pip("freeze").stdout.splitlines() if line.strip())
+
+
+def restore_venv():
+    """Put the shared venv back to exactly requirements.lock.txt and return what had changed.
+
+    Agents may pip-install packages while they work. Without this, a package one run
+    installed would still be there for every later run, so later runs would not start
+    from the same environment as earlier ones.
+    """
+    lock = sorted(line.strip() for line in open(LOCK, encoding="utf-8") if line.strip() and not line.startswith("#"))
+    now = freeze()
+    if now == lock:
+        return []
+    locked = {x.split("==")[0].lower() for x in lock}
+    extra = [x.split("==")[0] for x in now if x.split("==")[0].lower() not in locked]
+    if extra:
+        pip("uninstall", "-y", *extra)
+    pip("install", "-q", "-r", LOCK)
+    if freeze() != lock:
+        raise SystemExit("Could not restore the venv to requirements.lock.txt; stopping so runs stay comparable.")
+    return sorted(set(now) ^ set(lock))
+
+
+PREFLIGHT = r"""
+import os, sys
+import numpy, openpyxl
+from PIL import Image
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+out = sys.argv[1]
+os.makedirs(os.path.dirname(out), exist_ok=True)
+fig, ax = plt.subplots()
+ax.plot([0, 1], [0, 1])
+fig.savefig(out)
+Image.open(out).verify()
+print(f"preflight ok: python {sys.version.split()[0]}, matplotlib {matplotlib.__version__}, {sys.executable}")
+"""
+
+
+def preflight():
+    """Stop before any run unless the shared venv can draw and save a figure where the agents will work."""
+    root = os.path.join(HOME, "runs", "_preflight")
+    probe = os.path.join(root, "experiment", "baseline", "run-1", "figures", "sub", "preflight_" + "x" * 40 + ".png")
+    r = subprocess.run([os.path.join(venv_bin(), "python"), "-c", PREFLIGHT, probe],
+                       capture_output=True, text=True, env=clean_env(), cwd=HOME)
+    shutil.rmtree(root, ignore_errors=True)
+    if r.returncode != 0:
+        raise SystemExit("Preflight failed, so no run was started. The shared venv cannot draw a figure:\n"
+                         + r.stderr.strip()[-1500:] + "\n\nOn Windows this is usually the 260-character path limit. "
+                         "Set BENCH_HOME to a short folder (for example C:\\Users\\you\\rsb), run setup_env.ps1 "
+                         "again, and retry.")
+    return r.stdout.strip()
+
+
 def claude_cmd():
     exe = shutil.which("claude.cmd") or shutil.which("claude")
     if not exe:
@@ -61,7 +135,7 @@ def claude_cmd():
 
 
 def prepare(task, cond, k):
-    run_dir = os.path.join(HERE, "runs", task, cond, f"run-{k}")
+    run_dir = os.path.join(HOME, "runs", task, cond, f"run-{k}")
     if os.path.exists(run_dir):
         shutil.rmtree(run_dir)
     shutil.copytree(os.path.join(HERE, "tasks", task, "input"), run_dir)
@@ -130,8 +204,12 @@ def finish(run, status):
     for f in run["files"]:
         f.close()
     meta = summarize_transcript(os.path.join(run["dir"], "transcript.jsonl"))
+    lock = {line.strip() for line in open(LOCK, encoding="utf-8") if line.strip() and not line.startswith("#")}
     meta.update({"task": run["task"], "condition": run["cond"], "run": run["k"], "status": status,
-                 "wall_s": round(time.time() - run["t0"], 1)})
+                 "wall_s": round(time.time() - run["t0"], 1),
+                 # packages that differ from the lock when this run ended (the other run of the pair
+                 # shares the venv, so check transcripts to see which run changed it)
+                 "venv_diff_at_end": sorted(set(freeze()) ^ lock)})
     with open(os.path.join(run["dir"], "meta.json"), "w", encoding="utf-8") as fh:
         json.dump(meta, fh, ensure_ascii=False, indent=2)
     if meta.get("final_text"):
@@ -151,17 +229,26 @@ def main():
     args = ap.parse_args()
     tasks = [t for t in args.tasks.split(",") if t]
 
+    changed = restore_venv()
+    if changed:
+        print(f"venv restored to requirements.lock.txt (differed: {', '.join(changed)})", flush=True)
+    check = preflight()
+    print(check, flush=True)
     info = {"model": args.model, "tools": TOOLS, "python": os.path.join(venv_bin(), "python"),
+            "bench_home": HOME, "preflight": check,
             "claude_version": subprocess.run(claude_cmd() + ["--version"], capture_output=True, text=True,
                                              env=clean_env()).stdout.strip(),
             "started": time.strftime("%Y-%m-%d %H:%M:%S")}
-    os.makedirs(os.path.join(HERE, "runs"), exist_ok=True)
-    with open(os.path.join(HERE, "runs", "environment.json"), "w", encoding="utf-8") as fh:
+    os.makedirs(os.path.join(HOME, "runs"), exist_ok=True)
+    with open(os.path.join(HOME, "runs", "environment.json"), "w", encoding="utf-8") as fh:
         json.dump(info, fh, ensure_ascii=False, indent=2)
     print(json.dumps(info, ensure_ascii=False), flush=True)
 
     for k in range(args.start, args.start + args.reps):
         for task in tasks:
+            changed = restore_venv()
+            if changed:
+                print(f"[rep {k}] {task}: venv restored to the lock first (differed: {', '.join(changed)})", flush=True)
             print(f"[rep {k}] {task}: starting baseline and skill together", flush=True)
             runs = [start(task, c, k, args.model, args.timeout_min) for c in CONDITIONS]
             while runs:

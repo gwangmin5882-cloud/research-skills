@@ -1,0 +1,13 @@
+﻿task,condition,run,status,score,existence_score,claim_score,false_accusations,missed_fakes,duration_s,num_turns,tool_calls,output_tokens,cost_usd_equivalent,skill_invoked,skill_script_used
+citation,baseline,1,ok,1.0,1.0,1.0,0,0,138.3,22,21,9739,1.1776745,False,False
+citation,baseline,2,ok,1.0,1.0,1.0,0,0,78.9,12,11,5147,0.7526449999999999,False,False
+citation,baseline,3,ok,1.0,1.0,1.0,0,0,104.3,27,26,7101,1.0652095,False,False
+citation,skill,1,ok,1.0,1.0,1.0,0,0,119.3,17,15,6973,1.095949,True,True
+citation,skill,2,ok,1.0,1.0,1.0,0,0,113.3,15,13,6391,0.8574855,True,True
+citation,skill,3,ok,1.0,1.0,1.0,0,0,127.6,12,10,7543,0.7935924999999999,True,True
+experiment,baseline,1,ok,0.857,,,,,409.2,44,42,32066,2.7091499999999997,False,False
+experiment,baseline,2,ok,0.857,,,,,465.9,54,52,34765,3.602677,False,False
+experiment,baseline,3,ok,0.929,,,,,331.6,41,40,25778,2.3381974999999997,False,False
+experiment,skill,1,ok,1.0,,,,,194.4,31,29,15417,1.4053124999999997,True,True
+experiment,skill,2,ok,0.929,,,,,192.5,27,25,15382,1.2958154999999998,True,True
+experiment,skill,3,ok,1.0,,,,,208.7,32,30,17136,1.4401625,True,True
