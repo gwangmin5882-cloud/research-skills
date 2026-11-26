@@ -89,6 +89,19 @@ python skills/experiment-report/scripts/plot.py log.csv --kind line --x epoch --
 
 ---
 
+## 스킬이 있을 때와 없을 때 비교
+
+같은 모델(Claude Opus 5)과 같은 Python 가상환경에서 같은 과제를 조건마다 3번씩 돌렸습니다. 두 조건의 차이는 스킬을 불러왔는지 하나뿐입니다. 자세한 방법과 결과는 [`benchmark/`](benchmark/README.md)에 있습니다.
+
+| 과제 | 스킬 없음 | 스킬 있음 |
+|---|---|---|
+| 인용 검증 (10개 참고문헌 중 가짜·오류 찾기) | 3회 모두 만점, 107초 | 3회 모두 만점, 120초 |
+| 실험 결과 정리 (14개 항목 블라인드 채점) | 12·12·13점, 402초 | 14·13·14점, 199초 |
+
+- 인용 검증은 웹 검색이 되는 최신 모델이라면 스킬 없이도 다 맞혔습니다.
+- 실험 정리에서 생긴 차이는 대부분 그림이었습니다. 스킬 없이 만든 보고서 3건은 모두 라벨이 데이터나 다른 라벨과 겹쳤고, 스킬을 쓴 3건은 하나도 겹치지 않았습니다. 시간과 출력 토큰도 절반 수준이었습니다.
+- 조건당 3회, 모델 1개, AI 채점자 1명으로 한 작은 실험이라, 정밀한 측정이라기보다 시연에 가깝습니다.
+
 ## 한계
 
 - citation-check: 책, 학위논문, 국내 학술지, 나온 지 얼마 안 된 논문은 DB에 없을 수 있어서 "찾을 수 없음"이 곧 가짜라는 뜻은 아닙니다. 주장 판정은 초록만 보기 때문에, 확신이 없으면 "판단 불가"로 둡니다. OpenAlex 키워드 검색은 API 키가 없으면 제한되므로 `OPENALEX_API_KEY` 환경변수를 설정하면 더 많이 찾습니다.
@@ -110,6 +123,8 @@ Two free agent skills for research:
 - **experiment-report** turns result CSV/XLSX files into descriptive statistics, Welch's t-tests with Holm correction and effect sizes, publication-style figures that the agent visually checks and fixes, and a short report where every number comes from the computed summary.
 
 Install with `/plugin marketplace add gwangmin5882-cloud/research-skills` (Claude Code) or `npx skills add gwangmin5882-cloud/research-skills`. Requires Python 3.8+, plus matplotlib for figures.
+
+[`benchmark/`](benchmark/README.md) compares the same agent with and without the skills in one shared Python environment (3 runs each). Citation checking: no difference, since all runs scored 1.00. Experiment reports: 0.98 with the skill vs 0.88 without, mostly because of figure readability, in half the time.
 
 ## License
 

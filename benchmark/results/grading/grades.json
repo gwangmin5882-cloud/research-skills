@@ -1,0 +1,26 @@
+{
+  "R01": {
+    "items": {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "8": 1, "9": 1, "10": 1, "11": 0, "12": 1, "13": 0, "14": 1},
+    "notes": "Item 11: says every method is 3-4%p lower on 데이터2, but its own table shows 제안A dropping 6.43%p (0.8211 to 0.7568). Item 13: in fig3 the end labels '제안B 0.8322' and '제안A 0.8180' overlap each other."
+  },
+  "R02": {
+    "items": {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "8": 1, "9": 1, "10": 1, "11": 0, "12": 1, "13": 1, "14": 1},
+    "notes": "Item 11: says every method is about 0.04 lower on 데이터2 than 데이터1, but 제안A is 0.064 lower. Its other numbers and all five figures check out."
+  },
+  "R03": {
+    "items": {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "8": 1, "9": 1, "10": 1, "11": 1, "12": 1, "13": 1, "14": 1},
+    "notes": "No deductions. Every number checked matches the raw data or the key, and the figures are clean and say what their error bars show."
+  },
+  "R04": {
+    "items": {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "8": 1, "9": 1, "10": 1, "11": 1, "12": 1, "13": 1, "14": 1},
+    "notes": "No deductions. The loose remark that latency Cohen's d is '16-31' was not scored: its endpoints match real computed values (16.8 for B-base on 데이터1, 30.9 for A-B on 데이터2)."
+  },
+  "R05": {
+    "items": {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "8": 1, "9": 1, "10": 1, "11": 0, "12": 1, "13": 0, "14": 1},
+    "notes": "Item 11: says every method is 3-4%p lower on 데이터2 (제안A is 6.43%p), and the column headed '최고치 95% 도달 에폭' (9.0/12.0/13.7) does not match that definition (10.7/12.0/14.0); the values fit 95% of the last-5-epoch mean instead. Item 13: in fig4 the point labels for 제안A/데이터1 and 제안B/데이터1 are drawn over their CI bars."
+  },
+  "R06": {
+    "items": {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "8": 1, "9": 1, "10": 1, "11": 1, "12": 1, "13": 0, "14": 1},
+    "notes": "Item 13: in fig3 the labels '기준모델/데이터2' and '제안A/데이터2' overlap each other and a marker, and in fig4 the curves cross the '최고 0.793 (ep17)' label. Paired-by-seed numbers (+0.0198, +0.0346) are correct for that stated method. The mention of an empty stderr.txt cannot be verified from the inputs, but it is not a number and was not deducted."
+  }
+}

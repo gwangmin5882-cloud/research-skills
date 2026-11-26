@@ -1,0 +1,9 @@
+{
+  "model": "claude-opus-5",
+  "tools": "Bash Read Write Edit Glob Grep WebFetch WebSearch Skill",
+  "python": "C:\\Users\\PC\\rsb\\.venv\\Scripts\\python",
+  "bench_home": "C:\\Users\\PC\\rsb",
+  "preflight": "preflight ok: python 3.14.7, matplotlib 3.11.2, C:\\Users\\PC\\rsb\\.venv\\Scripts\\python.exe",
+  "claude_version": "2.1.278 (Claude Code)",
+  "started": "2026-11-25 11:38:53"
+}
